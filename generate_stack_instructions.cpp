@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define TODO()                                  \
 do{                                                           \
@@ -143,6 +144,15 @@ void emit (struct Stack_t *instr)
     all = List_new (instr, all);
 }
 
+int pop() {
+    assert(all != 0);
+    List_t *next = all->next;
+    int ret = ((Stack_Push *)(all->instr))->i;
+    free(all);
+    all = next;
+    return ret;
+}
+
 void compile (struct Exp_t *exp)
 {
     switch (exp->kind){
@@ -153,9 +163,19 @@ void compile (struct Exp_t *exp)
         }
         case EXP_SUM:{
             struct Exp_Sum *p = (struct Exp_Sum *)exp;
+
+            ////////////////////////////////
+            //without constant optimization
+            //compile(p->left);
+            //compile(p->right);
+            //emit(Stack_Add_new());
+            
+            ////////////////////////////////
+            //with constant optimization.
             compile(p->left);
             compile(p->right);
-            emit(Stack_Add_new());
+            int a = pop(), b = pop();
+            emit(Stack_Push_new(a+b));
             break;
         }
         default:
